@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
@@ -30,10 +31,23 @@ namespace USSD_Proxy
 
         private static void startAirtelListener(string Endpoint)
         {
+            Console.WriteLine("Attempting to start the listener..");
             AirtelUssdServer airtelUssdServer = new AirtelUssdServer();
             Task.Delay(100).ContinueWith(t => airtelUssdServer.StartListener(Endpoint));
         }
 
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
         internal class AirtelUssdServer
         {
              
@@ -46,7 +60,7 @@ namespace USSD_Proxy
                 }
                 catch (Exception exception)
                 {
-                    
+                    Console.WriteLine("Error on processing request: " + exception.Message);
                 }
             }
 
@@ -55,8 +69,12 @@ namespace USSD_Proxy
                 try
                 {
                     HttpListener listener = new HttpListener();
-                    listener.Prefixes.Add(endPoint);
+                    string Ip = GetLocalIPAddress();
+                    string url = "http://" + Ip + ":9246/";
+                    Console.WriteLine("Set IP to the local " + url);
+                    listener.Prefixes.Add(url);
                     listener.Start();
+                    Console.WriteLine("listener started on : " + url);
                     while (true)
                     {
                         try
@@ -66,13 +84,15 @@ namespace USSD_Proxy
                             continue;
                         }
                         catch (Exception exception)
-                        { 
+                        {
+                            Console.WriteLine("Error 1 on starting listener: " + exception.Message);
                             continue;
                         }
                     }
                 }
                 catch (Exception exception2)
-                { 
+                {
+                    Console.WriteLine("Error 2 on starting listener: " + exception2.Message);
                 }
             }
         }

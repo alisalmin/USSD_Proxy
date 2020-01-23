@@ -5,9 +5,8 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
 WORKDIR /src
-COPY ["USSD_Proxy.csproj", ""]
-COPY [".", "USSD_Proxy/"] 
-RUN dotnet restore "USSD_Proxy.csproj"
+COPY ["USSD_Proxy/USSD_Proxy.csproj", "USSD_Proxy/"]
+RUN dotnet restore "USSD_Proxy/USSD_Proxy.csproj"
 COPY . .
 WORKDIR "/src/USSD_Proxy"
 RUN dotnet build "USSD_Proxy.csproj" -c Release -o /app/build
